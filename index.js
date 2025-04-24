@@ -74,9 +74,21 @@ class Particle {
     }
 }
 
+class Ship {
+
+    constructor(x = canvas.width / 2, y = canvas.height / 2) {
+        this.x = x
+        this.y = y
+    }
+
+    draw(){
+        view.rect(this.x, this.y, 50, 50)
+        view.fill()
+    }
+}
 
 
-
+const ship = new Ship()
 
 for (let index = 0; index < particleCount; index++) 
     {
@@ -85,9 +97,12 @@ for (let index = 0; index < particleCount; index++)
 
 function animate(){
     view.clearRect(0,0,canvas.width, canvas.height)  
+    
     for (const p of particles) {
         p.draw();
     }
+    ship.draw();
+
     requestAnimationFrame(animate)
 }
 
