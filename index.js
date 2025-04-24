@@ -1,9 +1,7 @@
 const canvas = document.getElementById("canvasObject");
 const view = canvas.getContext("2d")
 
-const lineRange = 600
 const particleCount = 2
-const radius = 80
 
 
 window.addEventListener("resize", resizeCanvas)
@@ -13,10 +11,10 @@ function resizeCanvas()
 {
     canvas.height = innerHeight
     canvas.width = innerWidth
-    applyLineStyle()
+    setupCanvas()
 };
 
-function applyLineStyle(){
+function setupCanvas(){
     view.strokeStyle = "white"
     view.lineWidth = 2
     view.lineCap = "round"
@@ -25,20 +23,14 @@ function applyLineStyle(){
 
 }
 
-function between(x, min, max){
-    return x >= min && x <= max
-}
-
-
 resizeCanvas()
 
-const array = new Array()
+const particles = [];
 
 
-class Ball {
-    radius = 0
+class Particle {
 
-    constructor() {
+    constructor(radius=80) {
         const maxSpeed = 4;
 
         this.x = canvas.width * Math.random()
@@ -76,14 +68,6 @@ class Ball {
         this.y += this.dy
     }
 
-    shrink(arrayRef){
-
-        if (this.radius < 1){
-            this.stopRendering(arrayRef)
-        }
-        this.radius = this.radius - 0.05
-    }
-
     draw() {
         this.update()
 
@@ -93,26 +77,39 @@ class Ball {
     }
 
     stopRendering(arrayRef){
-        array.splice(arrayRef, 1)
+        particles.splice(arrayRef, 1)
     }
 }
 
+class Ship {
+    constructor(x = canvas.width / 2, y = canvas.height / 2){
+        this.x = x;
+        this.y = y;
+    }
+
+    draw()  {
+
+        view.rect(this.x, this.y, 50, 50);
+        view.fill();
 
 
+    }
+    
 
 
-for (let index = 0; index < particleCount; index++) {
-    const b = new Ball()
-    array[index] = b
 }
 
+
+for (let index = 0; index < particleCount; index++) particles.push(new Particle());
+const ship = new Ship(200, 200);
 function animate(){
 
     view.clearRect(0,0,canvas.width, canvas.height)  
     
-    for (const ball of array) {
-        ball.draw();
+    for (const p of particles) {
+        p.draw();
     }
+    ship.draw();
 
     requestAnimationFrame(animate)
 }
