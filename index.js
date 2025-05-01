@@ -1,37 +1,30 @@
 const canvas = document.getElementById("canvasObject");
-const view = canvas.getContext("2d")
+const view = canvas.getContext("2d");
+const particleCount = 2;
 
-const particleCount = 2
-
-
-window.addEventListener("resize", resizeCanvas)
-
+window.addEventListener("resize", resizeCanvas);
 
 function resizeCanvas()
 {
-    canvas.height = innerHeight
-    canvas.width = innerWidth
-    setupCanvas()
+    canvas.height = innerHeight;
+    canvas.width = innerWidth;
+    setupCanvas();
 };
 
 function setupCanvas(){
-    view.strokeStyle = "white"
-    view.lineWidth = 2
-    view.lineCap = "round"
-
-    view.fillStyle = "white"
-
+    view.strokeStyle = "white";
+    view.lineWidth = 2;
+    view.lineCap = "round";
+    view.fillStyle = "white";
 }
 
 resizeCanvas()
 
 const particles = [];
 
-
 class Particle {
-
-    constructor(radius=80) {
-        const maxSpeed = 4;
+    constructor(r = 80) {
+        const maxSpeed = 4
 
         this.x = canvas.width * Math.random()
         this.y = canvas.height * Math.random()
@@ -39,29 +32,29 @@ class Particle {
         this.dx = (maxSpeed * Math.random()) - (maxSpeed / 2)
         this.dy = (maxSpeed * Math.random()) - (maxSpeed / 2)
         
-        this.radius = radius
+        this.radius = r
     }
 
     get diameter() {
-        return this.radius * 2;
+        return this.radius * 2
     }
 
     update() {
 
         if (this.x > canvas.width + this.radius) {
-            this.x -= canvas.width + this.diameter;
+            this.x -= canvas.width + this.diameter
         }
 
         if (this.x < 0 - this.radius) {
-            this.x += canvas.width + this.diameter;
+            this.x += canvas.width + this.diameter
         }
 
         if (this.y > canvas.height + this.radius) {
-            this.y -= canvas.height + this.diameter;
+            this.y -= canvas.height + this.diameter
         }
 
         if (this.y < 0 - this.radius) {
-            this.y += canvas.height + this.diameter;
+            this.y += canvas.height + this.diameter
         }
 
         this.x += this.dx
@@ -71,9 +64,7 @@ class Particle {
     draw() {
         this.update()
 
-        view.beginPath()
-        view.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        view.fill()
+        view.fillRect(this.x, this.y, this.radius, 0, 2 * Math.PI);
     }
 
     stopRendering(arrayRef){
@@ -82,29 +73,56 @@ class Particle {
 }
 
 class Ship {
-    constructor(x = canvas.width / 2, y = canvas.height / 2){
-        this.x = x;
-        this.y = y;
+
+    constructor(xArg = canvas.width / 2, yArg = canvas.height / 2) {
+        this.x = xArg
+        this.y = yArg
+        this.angle = Math.PI / 2
+        this.radius = 40
     }
 
-    draw()  {
+    draw(){
+        const nose = {
+            x: this.radius,
+            y: 0
+        }
+        this.angle += 0.001
+        const rotatedPoint = this.rotate(nose)
 
-        //view.beginPath();
-        view.fillRect(this.x, this.y, 4, 4);
-        //view.fill();
+        const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
+        const rightPoint = this.rotate(nose, this.angle - Math.PI * .75)
 
+        view.beginPath()
+        view.moveTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
+        view.lineTo(this.x + leftPoint.x, this.y + leftPoint.y)
+        view.lineTo(this.x, this.y)
 
+        view.lineTo(this.x + rightPoint.x, this.y + rightPoint.y)
+        view.lineTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
+        view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
+
+        view.fill()
     }
-    
 
-
+    rotate(point, a = this.angle){
+        const rx = (point.x * Math.cos(a)) - (point.y * Math.sin(a))
+        const ry = (point.x * Math.sin(a)) + (point.y * Math.cos(a))
+        return {x: rx, y: ry}
+    }
 }
 
 
-for (let index = 0; index < particleCount; index++) particles.push(new Particle());
-const ship = new Ship();
-function animate(){
 
+
+
+const ship = new Ship()
+
+for (let index = 0; index < particleCount; index++) 
+    {
+        particles.push(new Particle())
+    }
+
+function animate(){
     view.clearRect(0,0,canvas.width, canvas.height)  
     
     for (const p of particles) {
