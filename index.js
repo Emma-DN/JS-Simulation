@@ -89,8 +89,9 @@ class Ship {
 
     draw()  {
 
-        view.rect(this.x, this.y, 50, 50);
-        view.fill();
+        //view.beginPath();
+        view.fillRect(this.x, this.y, 4, 4);
+        //view.fill();
 
 
     }
@@ -101,7 +102,7 @@ class Ship {
 
 
 for (let index = 0; index < particleCount; index++) particles.push(new Particle());
-const ship = new Ship(200, 200);
+const ship = new Ship();
 function animate(){
 
     view.clearRect(0,0,canvas.width, canvas.height)  
