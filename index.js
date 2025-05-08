@@ -3,6 +3,29 @@ const view = canvas.getContext("2d");
 const particleCount = 2;
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("keydown", keyDown)
+window.addEventListener("keyup", keyUp)
+
+const keys = {}
+
+function keyDown(e){
+    keys[e.code] = true
+}
+
+function keyUp(e){
+    keys[e.code] = false
+}
+
+class Keyboard {
+
+    static get Left() { return !!keys.KeyA }
+
+    static get Right(){ return !!keys.KeyD }
+
+    static get Thrust(){ return !!keys.KeyW }
+
+    1
+}
 
 function resizeCanvas()
 {
@@ -86,7 +109,9 @@ class Ship {
             x: this.radius,
             y: 0
         }
-        this.angle += 0.001
+
+        if (Keyboard.Left) { this.angle -= 0.01}
+        if (Keyboard.Right) { this.angle += 0.01}
         const rotatedPoint = this.rotate(nose)
 
         const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
