@@ -19,7 +19,7 @@ function keyUp(e) {
 class Keyboard {
     static get Left() { return !!keys.KeyA }
     static get Right() { return !!keys.KeyD }
-    static get Thrust() { return !!keys.KeyW }
+    static get Thrust() { return !!keys.KeyW || !!keys.Space }
 }
 
 function resizeCanvas()
@@ -97,17 +97,39 @@ class Ship {
         this.y = yArg
         this.angle = -Math.PI / 2
         this.radius = 40
+        this.dx = 0;
+        this.dy = 0;
+        this.power = 0.01;
+        this.maxSpeed = 3;
+    }
+
+    thrust(){
+        const ax = Math.cos(this.angle) * this.power;
+        const ay = Math.sin(this.angle) * this.power;
+
+        const dx = this.dx + ax;
+        const dy = this.dy + ay;
+
+        const newSpeed = Math.sqrt(dx ** 2 + dy ** 2);
+        if(newSpeed < this.maxSpeed)
+        {
+            this.dx = dx;
+            this.dy = dy;
+        }
+
     }
 
     draw(){
+
+        this.update();
+
         const nose = {
             x: this.radius,
             y: 0
         }
-    if(Keyboard.Left) this.angle -= 0.01;
-    if(Keyboard.Right) this.angle += 0.01;
-        const rotatedPoint = this.rotate(nose)
 
+
+        const rotatedPoint = this.rotate(nose)
         const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
         const rightPoint = this.rotate(nose, this.angle - Math.PI * .75)
 
@@ -115,12 +137,28 @@ class Ship {
         view.moveTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
         view.lineTo(this.x + leftPoint.x, this.y + leftPoint.y)
         view.lineTo(this.x, this.y)
-
         view.lineTo(this.x + rightPoint.x, this.y + rightPoint.y)
         view.lineTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
         view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
-
         view.fill()
+    }
+
+    update(){
+
+        if(Keyboard.Left) this.angle -= 0.015;
+        if(Keyboard.Right) this.angle += 0.015;
+        if(Keyboard.Thrust) this.thrust();
+
+        this.x += this.dx;
+        this.y += this.dy;
+
+        //Screen wrapping
+        if(this.x > canvas.width + this.radius) this.x = -this.radius;
+        if (this.x < -this.radius) this.x = canvas.width + this.radius;
+        if (this.y > canvas.height + this.radius) this.y = -this.radius;
+        if (this.y < -this.radius) this.y = canvas.height + this.radius;
+
+
     }
 
     rotate(point, a = this.angle){
