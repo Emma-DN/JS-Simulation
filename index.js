@@ -22,7 +22,7 @@ class Keyboard
 {
     static get Left() { return !!keys.KeyA; }
     static get Right() { return !!keys.KeyD; }
-    static get Thrust() { return !!keys.KeyW; }
+    static get Thrust() { return !!keys.KeyW || !!keys.Space; }
 }
 
 function resizeCanvas()
@@ -142,6 +142,11 @@ class Ship
         view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2);
         view.fill();
 
+        this.update();
+    }
+
+    update()
+    {
         this.processInput();
         this.moveShip();
     }
