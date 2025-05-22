@@ -3,23 +3,28 @@ const view = canvas.getContext("2d");
 const particleCount = 2;
 
 window.addEventListener("resize", resizeCanvas);
-window.addEventListener("keydown", keyDown);
-window.addEventListener("keyup", keyUp)
 
-let keys = {};
-
-function keyDown(e) {
-    keys[e.code] = true;
-}
-
-function keyUp(e) {
-    keys[e.code] = false;
-}
-// if(Keyboard.Left) Left();
 class Keyboard {
-    static get Left() { return !!keys.KeyA }
-    static get Right() { return !!keys.KeyD }
-    static get Thrust() { return !!keys.KeyW || !!keys.Space }
+    static keys = {};
+    static {
+        window.addEventListener("keydown", Keyboard.keyDown);
+        window.addEventListener("keyup", Keyboard.keyUp);
+    }
+    static keyDown(e) {
+        if(!e.repeat) Keyboard.keys[e.code] = true;
+    } 
+    static keyUp(e) {
+        Keyboard.keys[e.code] = false;
+    }
+    static keyOnce(key){
+        const down = !!Keyboard.keys[key];
+        Keyboard.keys[key] = false;
+        return down;
+    }
+    static get Left() { return !!Keyboard.keys.KeyA }
+    static get Right() { return !!Keyboard.keys.KeyD }
+    static get Thrust() { return !!Keyboard.keys.KeyW || !!Keyboard.keys.Space }
+    static get Fire() { return Keyboard.keyOnce("Enter") }
 }
 
 function resizeCanvas()
@@ -27,7 +32,7 @@ function resizeCanvas()
     canvas.height = innerHeight;
     canvas.width = innerWidth;
     setupCanvas();
-};
+}
 
 function setupCanvas(){
     view.strokeStyle = "white";
@@ -148,6 +153,7 @@ class Ship {
         if(Keyboard.Left) this.angle -= 0.015;
         if(Keyboard.Right) this.angle += 0.015;
         if(Keyboard.Thrust) this.thrust();
+        if(Keyboard.Fire) this.fire();
 
         this.x += this.dx;
         this.y += this.dy;
@@ -159,6 +165,10 @@ class Ship {
         if (this.y < -this.radius) this.y = canvas.height + this.radius;
 
 
+    }
+
+    fire(){
+        console.log("Fire!")
     }
 
     rotate(point, a = this.angle){
