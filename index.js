@@ -105,7 +105,7 @@ class Ship {
         this.dx = 0;
         this.dy = 0;
         this.power = 0.01;
-        this.maxSpeed = 3;
+        this.maxSpeed = 2;
     }
 
     thrust(){
@@ -169,7 +169,9 @@ class Ship {
 
     fire(){
         console.log("Fire!");
-        photons.push(new Photon(this.x, this.y, this.angle));
+        if (Photon.counter < 3){
+            photons.push(new Photon(this.x, this.y, this.angle));
+        }
     }
 
     rotate(point, a = this.angle){
@@ -180,11 +182,12 @@ class Ship {
 }
 
 class Photon {
-    
+    static counter = 0;
     constructor(x, y, angle) {
+        Photon.counter += 1
         this.ttl = 600; // changes based on monitor
         this.radius = 10;
-        this.power = 1;
+        this.power = 3;
         this.x = x;
         this.y = y;
         this.dx = Math.cos(angle) * this.power;
@@ -194,8 +197,13 @@ class Photon {
     update(){
         if (this.ttl > 0){
             this.ttl -= 1;
+            if (this.ttl === 0){
+                Photon.counter -= 1
+            }
             this.x += this.dx;
             this.y += this.dy;
+
+            if (this.ttl < 100) this.radius *= 0.98;
 
             if(this.x > canvas.width + this.radius) this.x = -this.radius;
             if (this.x < -this.radius) this.x = canvas.width + this.radius;
