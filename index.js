@@ -168,7 +168,8 @@ class Ship {
     }
 
     fire(){
-        console.log("Fire!")
+        console.log("Fire!");
+        photons.push(new Photon(this.x, this.y, this.angle));
     }
 
     rotate(point, a = this.angle){
@@ -178,11 +179,46 @@ class Ship {
     }
 }
 
+class Photon {
+    
+    constructor(x, y, angle) {
+        this.ttl = 600; // changes based on monitor
+        this.radius = 10;
+        this.power = 1;
+        this.x = x;
+        this.y = y;
+        this.dx = Math.cos(angle) * this.power;
+        this.dy = Math.sin(angle) * this.power;
+    }
 
+    update(){
+        if (this.ttl > 0){
+            this.ttl -= 1;
+            this.x += this.dx;
+            this.y += this.dy;
+
+            if(this.x > canvas.width + this.radius) this.x = -this.radius;
+            if (this.x < -this.radius) this.x = canvas.width + this.radius;
+            if (this.y > canvas.height + this.radius) this.y = -this.radius;
+            if (this.y < -this.radius) this.y = canvas.height + this.radius;
+        }
+
+    }
+
+    draw(){
+        if (this.ttl > 0){
+            view.beginPath()
+            view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
+            view.fill()
+        }
+    }
+}
 
 
 
 const ship = new Ship()
+
+const photons = [];
 
 for (let index = 0; index < particleCount; index++) 
     {
@@ -193,6 +229,11 @@ function animate(){
     view.clearRect(0,0,canvas.width, canvas.height)  
     
     for (const p of particles) {
+        p.draw();
+    }
+
+    for (const p of photons){
+        p.update();
         p.draw();
     }
     ship.draw();
