@@ -1,6 +1,6 @@
 const canvas = document.getElementById("canvasObject");
 const view = canvas.getContext("2d");
-const particleCount = 2;
+const particleCount = 1;
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -87,7 +87,10 @@ class Particle {
     draw() {
         this.update()
 
-        view.fillRect(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        //view.fillRect(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        view.beginPath()
+        view.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+        view.fill()
     }
 
     stopRendering(arrayRef){
@@ -106,6 +109,17 @@ class Ship {
         this.dy = 0;
         this.power = 0.01;
         this.maxSpeed = 2;
+    
+
+    }
+
+    get tip(){
+        const nose = {
+            x: this.radius,
+            y: 0
+        }
+
+        return this.rotate(nose)
     }
 
     thrust(){
@@ -170,7 +184,8 @@ class Ship {
     fire(){
         console.log("Fire!");
         if (Photon.counter < 3){
-            photons.push(new Photon(this.x, this.y, this.angle));
+            const nose = this.tip;
+            photons.push(new Photon(this.x + nose.x, this.y + nose.y, this.angle));
         }
     }
 
@@ -222,6 +237,10 @@ class Photon {
     }
 }
 
+function checkCollision(b1, b2){
+    return b1.radius + b2.radius < Math.hypot(b1.x, b1.y, b2.x, b2.y)
+}
+
 
 
 const ship = new Ship()
@@ -234,8 +253,13 @@ for (let index = 0; index < particleCount; index++)
     }
 
 function animate(){
-    view.clearRect(0,0,canvas.width, canvas.height)  
-    
+    view.clearRect(0,0,canvas.width, canvas.height)
+
+    if(checkCollision(ship, particles[0])){
+        console.log("Collision")
+        console.log(ship[0])
+    }
+
     for (const p of particles) {
         p.draw();
     }
