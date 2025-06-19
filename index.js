@@ -11,12 +11,12 @@ class Keyboard {
         window.addEventListener("keyup", Keyboard.keyUp);
     }
     static keyDown(e) {
-        if(!e.repeat) Keyboard.keys[e.code] = true;
-    } 
+        if (!e.repeat) Keyboard.keys[e.code] = true;
+    }
     static keyUp(e) {
         Keyboard.keys[e.code] = false;
     }
-    static keyOnce(key){
+    static keyOnce(key) {
         const down = !!Keyboard.keys[key];
         Keyboard.keys[key] = false;
         return down;
@@ -27,14 +27,13 @@ class Keyboard {
     static get Fire() { return Keyboard.keyOnce("Enter") }
 }
 
-function resizeCanvas()
-{
+function resizeCanvas() {
     canvas.height = innerHeight;
     canvas.width = innerWidth;
     setupCanvas();
 }
 
-function setupCanvas(){
+function setupCanvas() {
     view.strokeStyle = "white";
     view.lineWidth = 2;
     view.lineCap = "round";
@@ -43,9 +42,9 @@ function setupCanvas(){
 
 resizeCanvas()
 
-const particles = [];
 
-class Particle {
+
+class Body {
     constructor(r = 80) {
         const maxSpeed = 4
 
@@ -54,7 +53,7 @@ class Particle {
 
         this.dx = (maxSpeed * Math.random()) - (maxSpeed / 2)
         this.dy = (maxSpeed * Math.random()) - (maxSpeed / 2)
-        
+
         this.radius = r
     }
 
@@ -93,8 +92,8 @@ class Particle {
         view.fill()
     }
 
-    stopRendering(arrayRef){
-        particles.splice(arrayRef, 1)
+    stopRendering(arrayRef) {
+        bodies.splice(arrayRef, 1)
     }
 }
 
@@ -109,11 +108,10 @@ class Ship {
         this.dy = 0;
         this.power = 0.01;
         this.maxSpeed = 2;
-    
-
+        this.active = true;
     }
 
-    get tip(){
+    get tip() {
         const nose = {
             x: this.radius,
             y: 0
@@ -122,7 +120,7 @@ class Ship {
         return this.rotate(nose)
     }
 
-    thrust(){
+    thrust() {
         const ax = Math.cos(this.angle) * this.power;
         const ay = Math.sin(this.angle) * this.power;
 
@@ -130,69 +128,78 @@ class Ship {
         const dy = this.dy + ay;
 
         const newSpeed = Math.sqrt(dx ** 2 + dy ** 2);
-        if(newSpeed < this.maxSpeed)
-        {
+        if (newSpeed < this.maxSpeed) {
             this.dx = dx;
             this.dy = dy;
         }
 
     }
 
-    draw(){
+    draw() {
+        if (this.active) {
+            this.update();
 
-        this.update();
+            const nose = {
+                x: this.radius,
+                y: 0
+            }
 
-        const nose = {
-            x: this.radius,
-            y: 0
+
+            const rotatedPoint = this.rotate(nose)
+            const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
+            const rightPoint = this.rotate(nose, this.angle - Math.PI * .75)
+
+            view.beginPath()
+            view.moveTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
+            view.lineTo(this.x + leftPoint.x, this.y + leftPoint.y)
+            view.lineTo(this.x, this.y)
+            view.lineTo(this.x + rightPoint.x, this.y + rightPoint.y)
+            view.lineTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
+            view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
+            view.fill()
         }
-
-
-        const rotatedPoint = this.rotate(nose)
-        const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
-        const rightPoint = this.rotate(nose, this.angle - Math.PI * .75)
-
-        view.beginPath()
-        view.moveTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
-        view.lineTo(this.x + leftPoint.x, this.y + leftPoint.y)
-        view.lineTo(this.x, this.y)
-        view.lineTo(this.x + rightPoint.x, this.y + rightPoint.y)
-        view.lineTo(this.x + rotatedPoint.x, this.y + rotatedPoint.y)
-        view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
-        view.fill()
     }
 
-    update(){
+    update() {
+        if (this.active) {
+            if (Keyboard.Left) this.angle -= 0.015;
+            if (Keyboard.Right) this.angle += 0.015;
+            if (Keyboard.Thrust) this.thrust();
+            if (Keyboard.Fire) this.fire();
 
-        if(Keyboard.Left) this.angle -= 0.015;
-        if(Keyboard.Right) this.angle += 0.015;
-        if(Keyboard.Thrust) this.thrust();
-        if(Keyboard.Fire) this.fire();
+            this.x += this.dx;
+            this.y += this.dy;
 
-        this.x += this.dx;
-        this.y += this.dy;
-
-        //Screen wrapping
-        if(this.x > canvas.width + this.radius) this.x = -this.radius;
-        if (this.x < -this.radius) this.x = canvas.width + this.radius;
-        if (this.y > canvas.height + this.radius) this.y = -this.radius;
-        if (this.y < -this.radius) this.y = canvas.height + this.radius;
-
-
+            //Screen wrapping
+            if (this.x > canvas.width + this.radius) this.x = -this.radius;
+            if (this.x < -this.radius) this.x = canvas.width + this.radius;
+            if (this.y > canvas.height + this.radius) this.y = -this.radius;
+            if (this.y < -this.radius) this.y = canvas.height + this.radius;
+        }
     }
 
-    fire(){
+    fire() {
         console.log("Fire!");
-        if (Photon.counter < 3){
+        if (Photon.counter < 3) {
             const nose = this.tip;
             photons.push(new Photon(this.x + nose.x, this.y + nose.y, this.angle));
         }
     }
 
-    rotate(point, a = this.angle){
+    rotate(point, a = this.angle) {
         const rx = (point.x * Math.cos(a)) - (point.y * Math.sin(a))
         const ry = (point.x * Math.sin(a)) + (point.y * Math.cos(a))
-        return {x: rx, y: ry}
+        return { x: rx, y: ry }
+    }
+
+    checkCollisions(bodies) {
+        for (const body of bodies) {
+            if (checkCollision(this, body)) {
+                console.log("Collision")
+                this.active = false;
+                explosions.push(new Explosion(this.x, this.y))
+            }
+        }
     }
 }
 
@@ -209,10 +216,10 @@ class Photon {
         this.dy = Math.sin(angle) * this.power;
     }
 
-    update(){
-        if (this.ttl > 0){
+    update() {
+        if (this.ttl > 0) {
             this.ttl -= 1;
-            if (this.ttl === 0){
+            if (this.ttl === 0) {
                 Photon.counter -= 1
             }
             this.x += this.dx;
@@ -220,7 +227,7 @@ class Photon {
 
             if (this.ttl < 100) this.radius *= 0.98;
 
-            if(this.x > canvas.width + this.radius) this.x = -this.radius;
+            if (this.x > canvas.width + this.radius) this.x = -this.radius;
             if (this.x < -this.radius) this.x = canvas.width + this.radius;
             if (this.y > canvas.height + this.radius) this.y = -this.radius;
             if (this.y < -this.radius) this.y = canvas.height + this.radius;
@@ -228,8 +235,8 @@ class Photon {
 
     }
 
-    draw(){
-        if (this.ttl > 0){
+    draw() {
+        if (this.ttl > 0) {
             view.beginPath()
             view.arc(this.x, this.y, this.radius / 2.6, 0, Math.PI * 2)
             view.fill()
@@ -237,42 +244,63 @@ class Photon {
     }
 }
 
-function checkCollision(b1, b2){
-    return b1.radius + b2.radius < Math.hypot(b1.x, b1.y, b2.x, b2.y)
+class Explosion {
+    constructor(x, y, count = 400){
+        this.particles = []
+
+        for(let i = 0; i < count; i++){
+            this.particles.push(new Particle(x, y))
+        }
+    }
+
+    draw(){ for(const p of this.particles) p.draw() }
 }
 
+class Particle {
+    constructor(x, y){
+        this.x = x
+        this.y = y
+    }
 
+    draw(){
+        
+    }
+}
+
+function checkCollision(b1, b2) {
+    return b1.radius + b2.radius > Math.hypot(b1.x - b2.x, b1.y - b2.y)
+}
 
 const ship = new Ship()
-
 const photons = [];
+const bodies = [];
+const explosions = [];
 
-for (let index = 0; index < particleCount; index++) 
-    {
-        particles.push(new Particle())
+for (let index = 0; index < particleCount; index++) {
+    bodies.push(new Body())
+}
+
+function animate() {
+    view.clearRect(0, 0, canvas.width, canvas.height)
+
+    ship.checkCollisions(bodies)
+
+    for (const b of bodies) {
+        b.draw();
     }
 
-function animate(){
-    view.clearRect(0,0,canvas.width, canvas.height)
-
-    if(checkCollision(ship, particles[0])){
-        console.log("Collision")
-        console.log(ship[0])
-    }
-
-    for (const p of particles) {
-        p.draw();
-    }
-
-    for (const p of photons){
+    for (const p of photons) {
         p.update();
         p.draw();
     }
+
+    for(const e of explosions){
+        e.draw();
+    }
+
     ship.draw();
 
     requestAnimationFrame(animate)
 }
-
-
 
 animate()
