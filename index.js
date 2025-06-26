@@ -193,6 +193,7 @@ class Ship {
     }
 
     checkCollisions(bodies) {
+        if (!this.active) return
         for (const body of bodies) {
             if (checkCollision(this, body)) {
                 console.log("Collision")
@@ -245,11 +246,13 @@ class Photon {
 }
 
 class Explosion {
-    constructor(x, y, count = 400){
+    constructor(x, y, count = 10000){
         this.particles = []
 
         for(let i = 0; i < count; i++){
+
             this.particles.push(new Particle(x, y))
+
         }
     }
 
@@ -258,12 +261,34 @@ class Explosion {
 
 class Particle {
     constructor(x, y){
+        const angle = Math.PI * 2 * Math.random()
+        this.maxSpeed = 2
+         
         this.x = x
         this.y = y
+        const speedFactor = Math.random()
+        this.dx = Math.cos(angle) * this.maxSpeed * speedFactor
+        this.dy = Math.sin(angle) * this.maxSpeed * speedFactor
+        this.size = 10
+        this.halfSize = this.size / 2
+        this.maxttl = 150
+        this.ttl = this.maxttl
+
+        this.color = [255,255,255,1]
     }
 
     draw(){
-        
+
+        if (this.ttl > 0) {
+            this.x += this.dx
+            this.y += this.dy
+            const oldStyle = view.fillStyle
+
+            view.fillStyle = `rgba(${this.color[0]},${this.color[1]}, ${this.color[2]}, ${this.ttl / this.maxttl})`
+            view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)   
+            view.fillStyle = oldStyle
+            this.ttl -= 1;
+        }
     }
 }
 
@@ -284,6 +309,7 @@ function animate() {
     view.clearRect(0, 0, canvas.width, canvas.height)
 
     ship.checkCollisions(bodies)
+
 
     for (const b of bodies) {
         b.draw();
