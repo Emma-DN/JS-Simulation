@@ -133,6 +133,9 @@ class Ship {
             this.dy = dy;
         }
 
+        
+        explosions.push(new Boost(this.x, this.y, this.angle + Math.PI, 5))
+
     }
 
     draw() {
@@ -246,24 +249,76 @@ class Photon {
 }
 
 class Explosion {
-    constructor(x, y, count = 10000){
+    constructor(x, y, count = 400) {
         this.particles = []
 
-        for(let i = 0; i < count; i++){
+        for (let i = 0; i < count; i++) {
 
             this.particles.push(new Particle(x, y))
 
         }
     }
 
-    draw(){ for(const p of this.particles) p.draw() }
+    draw() { for (const p of this.particles) p.draw() }
+}
+
+class Boost {
+    constructor(x, y, angle, count) {
+        this.particles = []
+        for (let i = 0; i < count; i++) {
+
+            this.particles.push(new BoostParticle(x, y, angle))
+
+        }
+
+    }
+
+    draw() { for (const p of this.particles) p.draw() }
+}
+
+function random(min, max){
+    return Math.random() * (max - min) + min
+}
+
+class BoostParticle {
+    constructor(x, y, angle) {
+        this.x = x
+        this.y = y
+        const maxSpread = 0.5
+        this.spread = random(-maxSpread, maxSpread)
+        angle += this.spread
+        this.maxSpeed = 2
+        this.dx = Math.cos(angle) * this.maxSpeed
+        this.dy = Math.sin(angle) * this.maxSpeed
+
+        this.size = 4
+        this.halfSize = this.size / 2
+
+        this.maxttl = 60
+        this.ttl = this.maxttl
+        this.color = [255, 255, 255, 1]
+    }
+
+    draw() {
+        if (this.ttl > 0) {
+            this.x += this.dx
+            this.y += this.dy
+            const oldStyle = view.fillStyle
+
+            view.fillStyle = `rgba(${this.color[0]},${this.color[1]}, ${this.color[2]}, ${this.ttl / this.maxttl})`
+            view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)
+            view.fillStyle = oldStyle
+            this.ttl -= 1;
+        }
+
+    }
 }
 
 class Particle {
-    constructor(x, y){
+    constructor(x, y) {
         const angle = Math.PI * 2 * Math.random()
         this.maxSpeed = 2
-         
+
         this.x = x
         this.y = y
         const speedFactor = Math.random()
@@ -274,10 +329,10 @@ class Particle {
         this.maxttl = 150
         this.ttl = this.maxttl
 
-        this.color = [255,255,255,1]
+        this.color = [255, 255, 255, 1]
     }
 
-    draw(){
+    draw() {
 
         if (this.ttl > 0) {
             this.x += this.dx
@@ -285,7 +340,7 @@ class Particle {
             const oldStyle = view.fillStyle
 
             view.fillStyle = `rgba(${this.color[0]},${this.color[1]}, ${this.color[2]}, ${this.ttl / this.maxttl})`
-            view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)   
+            view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)
             view.fillStyle = oldStyle
             this.ttl -= 1;
         }
@@ -320,7 +375,7 @@ function animate() {
         p.draw();
     }
 
-    for(const e of explosions){
+    for (const e of explosions) {
         e.draw();
     }
 
