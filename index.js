@@ -274,11 +274,8 @@ class Explosion {
 class Boost {
     constructor(x, y, angle, count) {
         this.particles = []
-        this.active = true
         for (let i = 0; i < count; i++) {
-
             this.particles.push(new BoostParticle(x, y, angle))
-
         }
 
     }
@@ -392,6 +389,8 @@ function animate() {
         p.update();
         p.draw();
     }
+    console.log(`Photons Size: ${photons.length}`)
+
 
     let explosionsIterator = 0
     for (const e of explosions) {
@@ -402,7 +401,7 @@ function animate() {
         e.draw();
         explosionsIterator++
     }
-    
+    console.log(`Explosions Size: ${explosions.length}`)
     ship.draw();
 
     requestAnimationFrame(animate)
