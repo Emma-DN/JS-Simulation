@@ -182,7 +182,6 @@ class Ship {
     }
 
     fire() {
-        console.log("Fire!");
         if (Photon.counter < 3) {
             const nose = this.tip;
             photons.push(new Photon(this.x + nose.x, this.y + nose.y, this.angle));
@@ -199,7 +198,6 @@ class Ship {
         if (!this.active) return
         for (const body of bodies) {
             if (checkCollision(this, body)) {
-                console.log("Collision")
                 this.active = false;
                 explosions.push(new Explosion(this.x, this.y))
             }
@@ -225,6 +223,7 @@ class Photon {
             this.ttl -= 1;
             if (this.ttl === 0) {
                 Photon.counter -= 1
+                photons.shift()
             }
             this.x += this.dx;
             this.y += this.dy;
@@ -250,21 +249,32 @@ class Photon {
 
 class Explosion {
     constructor(x, y, count = 400) {
+        this.ttl = 1000
         this.particles = []
 
         for (let i = 0; i < count; i++) {
-
             this.particles.push(new Particle(x, y))
-
         }
+
     }
 
-    draw() { for (const p of this.particles) p.draw() }
+    draw() { 
+        for (const p of this.particles) {
+            if (p.ttl == 0){
+                this.particles.pop()
+                continue
+            }
+            this.ttl --
+            p.draw() 
+        }
+
+    }
 }
 
 class Boost {
     constructor(x, y, angle, count) {
         this.particles = []
+        this.active = true
         for (let i = 0; i < count; i++) {
 
             this.particles.push(new BoostParticle(x, y, angle))
@@ -273,7 +283,15 @@ class Boost {
 
     }
 
-    draw() { for (const p of this.particles) p.draw() }
+    draw() { for (const p of this.particles ) 
+        {
+            if (p.ttl == 0){
+                this.particles.pop()
+                continue
+            }
+            p.draw()
+        }
+     }
 }
 
 function random(min, max){
@@ -375,13 +393,20 @@ function animate() {
         p.draw();
     }
 
+    let explosionsIterator = 0
     for (const e of explosions) {
+        
+        if (explosions[explosionsIterator].particles.length == 0){
+            explosions.splice(explosionsIterator, 1)
+        }
         e.draw();
+        explosionsIterator++
     }
-
+    
     ship.draw();
 
     requestAnimationFrame(animate)
 }
 
+// Drawing Explosions
 animate()
