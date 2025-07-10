@@ -46,6 +46,8 @@ resizeCanvas()
 
 class Body {
     constructor(r = 80) {
+        this.active = true;
+
         const maxSpeed = 4
 
         this.x = canvas.width * Math.random()
@@ -63,33 +65,34 @@ class Body {
 
     update() {
 
-        if (this.x > canvas.width + this.radius) {
-            this.x -= canvas.width + this.diameter
-        }
+        if (this.active) {
+            if (this.x > canvas.width + this.radius) {
+                this.x -= canvas.width + this.diameter
+            }
 
-        if (this.x < 0 - this.radius) {
-            this.x += canvas.width + this.diameter
-        }
+            if (this.x < 0 - this.radius) {
+                this.x += canvas.width + this.diameter
+            }
 
-        if (this.y > canvas.height + this.radius) {
-            this.y -= canvas.height + this.diameter
-        }
+            if (this.y > canvas.height + this.radius) {
+                this.y -= canvas.height + this.diameter
+            }
 
-        if (this.y < 0 - this.radius) {
-            this.y += canvas.height + this.diameter
-        }
+            if (this.y < 0 - this.radius) {
+                this.y += canvas.height + this.diameter
+            }
 
-        this.x += this.dx
-        this.y += this.dy
+            this.x += this.dx
+            this.y += this.dy
+        }
     }
 
     draw() {
-        this.update()
-
-        //view.fillRect(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        view.beginPath()
-        view.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
-        view.fill()
+        if (this.active) {
+            view.beginPath()
+            view.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
+            view.fill()
+        }
     }
 
     stopRendering(arrayRef) {
@@ -133,7 +136,7 @@ class Ship {
             this.dy = dy;
         }
 
-        
+
         explosions.push(new Boost(this.x, this.y, this.angle + Math.PI, 5))
 
     }
@@ -276,7 +279,7 @@ class Boost {
     draw() { for (const p of this.particles) p.draw() }
 }
 
-function random(min, max){
+function random(min, max) {
     return Math.random() * (max - min) + min
 }
 
@@ -363,15 +366,22 @@ for (let index = 0; index < particleCount; index++) {
 function animate() {
     view.clearRect(0, 0, canvas.width, canvas.height)
 
-    ship.checkCollisions(bodies)
+    for (const b of bodies) {
+        b.update();
+    }
 
+    for (const p of photons) {
+        p.update();
+    }
+
+    ship.checkCollisions(bodies)
+    checkBodyCollisions(bodies, photons);
 
     for (const b of bodies) {
         b.draw();
     }
 
     for (const p of photons) {
-        p.update();
         p.draw();
     }
 
@@ -382,6 +392,20 @@ function animate() {
     ship.draw();
 
     requestAnimationFrame(animate)
+}
+
+function checkBodyCollisions(bodies, photons) {
+    for (const b of bodies) {
+        if (b.active) {
+            for (const p of photons) {
+                if (checkCollision(b, p)) {
+                    b.active = false;
+                    p.ttl = 0;
+                    explosions.push(new Explosion(b.x, b.y))
+                }
+            }
+        }
+    }
 }
 
 animate()
