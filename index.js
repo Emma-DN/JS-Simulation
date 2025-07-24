@@ -1,6 +1,7 @@
 const canvas = document.getElementById("canvasObject");
 const view = canvas.getContext("2d");
 const particleCount = 1;
+const baseFrameRate = 60;
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -63,7 +64,7 @@ class Body {
         return this.radius * 2
     }
 
-    update() {
+    update(deltaTime = 1) {
 
         if (this.active) {
             if (this.x > canvas.width + this.radius) {
@@ -82,8 +83,8 @@ class Body {
                 this.y += canvas.height + this.diameter
             }
 
-            this.x += this.dx
-            this.y += this.dy
+            this.x += this.dx * deltaTime * baseFrameRate;
+            this.y += this.dy * deltaTime * baseFrameRate;
         }
     }
 
@@ -123,9 +124,9 @@ class Ship {
         return this.rotate(nose)
     }
 
-    thrust() {
-        const ax = Math.cos(this.angle) * this.power;
-        const ay = Math.sin(this.angle) * this.power;
+    thrust(deltaTime = 1) {
+        const ax = Math.cos(this.angle) * this.power * deltaTime * baseFrameRate;
+        const ay = Math.sin(this.angle) * this.power * deltaTime * baseFrameRate;
 
         const dx = this.dx + ax;
         const dy = this.dy + ay;
@@ -136,20 +137,18 @@ class Ship {
             this.dy = dy;
         }
 
-
         explosions.push(new Boost(this.x, this.y, this.angle + Math.PI, 5))
 
     }
 
-    draw() {
+    draw(deltaTime = 1) {
         if (this.active) {
-            this.update();
+            this.update(deltaTime);
 
             const nose = {
                 x: this.radius,
                 y: 0
             }
-
 
             const rotatedPoint = this.rotate(nose)
             const leftPoint = this.rotate(nose, this.angle + Math.PI * .75)
@@ -166,15 +165,15 @@ class Ship {
         }
     }
 
-    update() {
+    update(deltaTime = 1) {
         if (this.active) {
-            if (Keyboard.Left) this.angle -= 0.015;
-            if (Keyboard.Right) this.angle += 0.015;
-            if (Keyboard.Thrust) this.thrust();
+            if (Keyboard.Left) this.angle -= 0.015 * deltaTime * baseFrameRate;
+            if (Keyboard.Right) this.angle += 0.015 * deltaTime * baseFrameRate;
+            if (Keyboard.Thrust) this.thrust(deltaTime);
             if (Keyboard.Fire) this.fire();
 
-            this.x += this.dx;
-            this.y += this.dy;
+            this.x += this.dx * deltaTime * baseFrameRate;
+            this.y += this.dy * deltaTime * baseFrameRate;
 
             //Screen wrapping
             if (this.x > canvas.width + this.radius) this.x = -this.radius;
@@ -214,7 +213,7 @@ class Photon {
     static counter = 0;
     constructor(x, y, angle) {
         Photon.counter += 1
-        this.ttl = 600; // changes based on monitor
+        this.ttl = 600;
         this.radius = 10;
         this.power = 3;
         this.x = x;
@@ -223,16 +222,16 @@ class Photon {
         this.dy = Math.sin(angle) * this.power;
     }
 
-    update() {
+    update(deltaTime = 1) {
         if (this.ttl > 0) {
-            this.ttl -= 1;
-            if (this.ttl === 0) {
+            this.ttl -= deltaTime * baseFrameRate;
+            if (this.ttl <= 0) {
                 this.die()
             }
-            this.x += this.dx;
-            this.y += this.dy;
+            this.x += this.dx * deltaTime * baseFrameRate;
+            this.y += this.dy * deltaTime * baseFrameRate;
 
-            if (this.ttl < 100) this.radius *= 0.98;
+            if (this.ttl < 100) this.radius *= Math.pow(0.98, deltaTime * baseFrameRate);
 
             if (this.x > canvas.width + this.radius) this.x = -this.radius;
             if (this.x < -this.radius) this.x = canvas.width + this.radius;
@@ -242,7 +241,7 @@ class Photon {
 
     }
 
-    die(){
+    die() {
         this.ttl = 0
         Photon.counter -= 1
     }
@@ -267,20 +266,22 @@ class Explosion {
         }
     }
 
+    update(deltaTime = 1) { for (const p of this.particles) p.update(deltaTime) }
+
     draw() { for (const p of this.particles) p.draw() }
-    
-    cleanup(){
-        for (let i = this.particles.length - 1; i >= 0; --i){
-            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+
+    cleanup() {
+        for (let i = this.particles.length - 1; i >= 0; --i) {
+            if (i === this.particles.length - 1 && this.particles[i].ttl === 0) {
 
                 this.particles.pop();
                 continue;
-            }    
-            
-            if (this.particles[i].ttl === 0){
+            }
+
+            if (this.particles[i].ttl === 0) {
                 this.particles[i] = this.particles.pop()
             }
-            
+
         }
 
     }
@@ -297,19 +298,21 @@ class Boost {
 
     }
 
+    update(deltaTime = 1) { for (const p of this.particles) p.update(deltaTime) }
+
     draw() { for (const p of this.particles) p.draw() }
 
-        cleanup(){
-        for (let i = this.particles.length - 1; i >= 0; --i){
-            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+    cleanup() {
+        for (let i = this.particles.length - 1; i >= 0; --i) {
+            if (i === this.particles.length - 1 && this.particles[i].ttl === 0) {
                 this.particles.pop();
                 continue;
-            }    
-            
-            if (this.particles[i].ttl === 0){
+            }
+
+            if (this.particles[i].ttl === 0) {
                 this.particles[i] = this.particles.pop()
             }
-            
+
         }
 
     }
@@ -338,16 +341,21 @@ class BoostParticle {
         this.color = [255, 255, 255, 1]
     }
 
+    update(deltaTime = 1) {
+        if (this.ttl > 0) {
+            this.x += this.dx * deltaTime * baseFrameRate;
+            this.y += this.dy * deltaTime * baseFrameRate;
+            this.ttl -= deltaTime * baseFrameRate;
+            if (this.ttl < 0) this.ttl = 0;
+        }
+    }
+
     draw() {
         if (this.ttl > 0) {
-            this.x += this.dx
-            this.y += this.dy
             const oldStyle = view.fillStyle
-
             view.fillStyle = `rgba(${this.color[0]},${this.color[1]}, ${this.color[2]}, ${this.ttl / this.maxttl})`
             view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)
             view.fillStyle = oldStyle
-            this.ttl -= 1;
         }
 
     }
@@ -371,26 +379,33 @@ class Particle {
         this.color = [255, 255, 255, 1]
     }
 
+    update(deltaTime = 1) {
+        if (this.ttl > 0) {
+            this.x += this.dx * deltaTime * baseFrameRate;
+            this.y += this.dy * deltaTime * baseFrameRate;
+            this.ttl -= deltaTime * baseFrameRate;
+            if(this.ttl < 0) this.ttl = 0;
+        }
+
+    }
+
     draw() {
 
         if (this.ttl > 0) {
-            this.x += this.dx
-            this.y += this.dy
-            const oldStyle = view.fillStyle
 
+            const oldStyle = view.fillStyle
             view.fillStyle = `rgba(${this.color[0]},${this.color[1]}, ${this.color[2]}, ${this.ttl / this.maxttl})`
             view.fillRect(this.x - this.halfSize, this.y - this.halfSize, this.size, this.size)
             view.fillStyle = oldStyle
-            this.ttl -= 1;
         }
     }
 }
 
-function cleanup(){
+function cleanup() {
     console.log(`Length Before: ${explosions.length}`)
     bodies = bodies.filter(b => b.active)
     photons = photons.filter(p => p.ttl > 0)
-    for (const e of explosions){
+    for (const e of explosions) {
         console.log(`Particles Length before: ${e.particles.length}`)
         e.cleanup()
         console.log(`Particles Length after: ${e.particles.length}`)
@@ -415,20 +430,31 @@ for (let index = 0; index < particleCount; index++) {
 
 let counter = 0
 
-function animate() {
+let lastTime = performance.now();
 
-    if (++counter % 600 === 0){
+function animate(now = performance.now()) {
+
+    let deltaTime = (now - lastTime) / 1000;
+    lastTime = now;
+
+    deltaTime = Math.min(deltaTime, 0.05);
+
+    if (++counter % 600 === 0) {
         cleanup()
     }
 
     view.clearRect(0, 0, canvas.width, canvas.height)
 
     for (const b of bodies) {
-        b.update();
+        b.update(deltaTime);
     }
 
     for (const p of photons) {
-        p.update();
+        p.update(deltaTime);
+    }
+
+    for (const e of explosions){
+        e.update(deltaTime);
     }
 
     ship.checkCollisions(bodies)
@@ -446,7 +472,7 @@ function animate() {
         e.draw();
     }
 
-    ship.draw();
+    ship.draw(deltaTime);
 
     requestAnimationFrame(animate)
 }
@@ -461,7 +487,7 @@ function checkBodyCollisions(bds, photons) {
                     p.die();
                     explosions.push(new Explosion(b.x, b.y));
 
-                    if (b.radius > 40 ){
+                    if (b.radius > 40) {
                         bodies.push(new Body(b.radius * 0.75, b.x, b.y));
                         bodies.push(new Body(b.radius * 0.75, b.x, b.y));
                     }
