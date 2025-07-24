@@ -45,13 +45,13 @@ resizeCanvas()
 
 
 class Body {
-    constructor(r = 80) {
+    constructor(r = 80, argX = canvas.width * Math.random(), argY = canvas.height * Math.random()) {
         this.active = true;
 
         const maxSpeed = 4
 
-        this.x = canvas.width * Math.random()
-        this.y = canvas.height * Math.random()
+        this.x = argX
+        this.y = argY
 
         this.dx = (maxSpeed * Math.random()) - (maxSpeed / 2)
         this.dy = (maxSpeed * Math.random()) - (maxSpeed / 2)
@@ -227,7 +227,7 @@ class Photon {
         if (this.ttl > 0) {
             this.ttl -= 1;
             if (this.ttl === 0) {
-                Photon.counter -= 1
+                this.die()
             }
             this.x += this.dx;
             this.y += this.dy;
@@ -240,6 +240,11 @@ class Photon {
             if (this.y < -this.radius) this.y = canvas.height + this.radius;
         }
 
+    }
+
+    die(){
+        this.ttl = 0
+        Photon.counter -= 1
     }
 
     draw() {
@@ -263,6 +268,22 @@ class Explosion {
     }
 
     draw() { for (const p of this.particles) p.draw() }
+    
+    cleanup(){
+        for (let i = this.particles.length - 1; i >= 0; --i){
+            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+
+                this.particles.pop();
+                continue;
+            }    
+            
+            if (this.particles[i].ttl === 0){
+                this.particles[i] = this.particles.pop()
+            }
+            
+        }
+
+    }
 }
 
 class Boost {
@@ -277,6 +298,21 @@ class Boost {
     }
 
     draw() { for (const p of this.particles) p.draw() }
+
+        cleanup(){
+        for (let i = this.particles.length - 1; i >= 0; --i){
+            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+                this.particles.pop();
+                continue;
+            }    
+            
+            if (this.particles[i].ttl === 0){
+                this.particles[i] = this.particles.pop()
+            }
+            
+        }
+
+    }
 }
 
 function random(min, max) {
@@ -350,20 +386,41 @@ class Particle {
     }
 }
 
+function cleanup(){
+    console.log(`Length Before: ${explosions.length}`)
+    bodies = bodies.filter(b => b.active)
+    photons = photons.filter(p => p.ttl > 0)
+    for (const e of explosions){
+        console.log(`Particles Length before: ${e.particles.length}`)
+        e.cleanup()
+        console.log(`Particles Length after: ${e.particles.length}`)
+    }
+    explosions = explosions.filter(e => e.particles.length > 0)
+    console.log(`Length After: ${explosions.length}`)
+
+}
+
 function checkCollision(b1, b2) {
     return b1.radius + b2.radius > Math.hypot(b1.x - b2.x, b1.y - b2.y)
 }
 
 const ship = new Ship()
-const photons = [];
-const bodies = [];
-const explosions = [];
+let photons = [];
+let bodies = [];
+let explosions = [];
 
 for (let index = 0; index < particleCount; index++) {
     bodies.push(new Body())
 }
 
+let counter = 0
+
 function animate() {
+
+    if (++counter % 600 === 0){
+        cleanup()
+    }
+
     view.clearRect(0, 0, canvas.width, canvas.height)
 
     for (const b of bodies) {
@@ -394,14 +451,20 @@ function animate() {
     requestAnimationFrame(animate)
 }
 
-function checkBodyCollisions(bodies, photons) {
-    for (const b of bodies) {
+function checkBodyCollisions(bds, photons) {
+    for (const b of bds) {
         if (b.active) {
             for (const p of photons) {
+                if (p.ttl === 0) continue;
                 if (checkCollision(b, p)) {
                     b.active = false;
-                    p.ttl = 0;
-                    explosions.push(new Explosion(b.x, b.y))
+                    p.die();
+                    explosions.push(new Explosion(b.x, b.y));
+
+                    if (b.radius > 40 ){
+                        bodies.push(new Body(b.radius * 0.75, b.x, b.y));
+                        bodies.push(new Body(b.radius * 0.75, b.x, b.y));
+                    }
                 }
             }
         }
