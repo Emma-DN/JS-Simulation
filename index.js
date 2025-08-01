@@ -415,7 +415,18 @@ for (let index = 0; index < particleCount; index++) {
 
 let counter = 0
 
-function animate() {
+const targetFPS = 60;
+const threshold = 1000 / targetFPS; // 1 second / 60fps = 16.67ms threshold
+let lastFrameTime = performance.now();
+
+function animate(currentTime = performance.now()) {
+
+    if(currentTime - lastFrameTime < threshold){
+        requestAnimationFrame(animate);
+        return;
+    }
+    lastFrameTime = currentTime;
+
 
     if (++counter % 600 === 0){
         cleanup()
