@@ -1,6 +1,5 @@
 const canvas = document.getElementById("canvasObject");
 const view = canvas.getContext("2d");
-const particleCount = 1;
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -45,9 +44,15 @@ resizeCanvas()
 
 
 class Body {
+    static bodies = [];
+    static count = 3;
+    static {
+        for (let index = 0; index < Body.count; index++) {
+            Body.bodies.push(new Body())
+        }
+    }
     constructor(r = 80, argX = canvas.width * Math.random(), argY = canvas.height * Math.random()) {
         this.active = true;
-
         const maxSpeed = 4
 
         this.x = argX
@@ -188,7 +193,7 @@ class Ship {
         console.log("Fire!");
         if (Photon.counter < 3) {
             const nose = this.tip;
-            photons.push(new Photon(this.x + nose.x, this.y + nose.y, this.angle));
+            Photon.photons.push(new Photon(this.x + nose.x, this.y + nose.y, this.angle));
         }
     }
 
@@ -204,13 +209,14 @@ class Ship {
             if (checkCollision(this, body)) {
                 console.log("Collision")
                 this.active = false;
-                explosions.push(new Explosion(this.x, this.y))
+                Explosion.explosions.push(new Explosion(this.x, this.y))
             }
         }
     }
 }
 
 class Photon {
+    static photons = [];
     static counter = 0;
     constructor(x, y, angle) {
         Photon.counter += 1
@@ -242,7 +248,7 @@ class Photon {
 
     }
 
-    die(){
+    die() {
         this.ttl = 0
         Photon.counter -= 1
     }
@@ -257,6 +263,7 @@ class Photon {
 }
 
 class Explosion {
+    static explosions = [];
     constructor(x, y, count = 400) {
         this.particles = []
 
@@ -268,19 +275,19 @@ class Explosion {
     }
 
     draw() { for (const p of this.particles) p.draw() }
-    
-    cleanup(){
-        for (let i = this.particles.length - 1; i >= 0; --i){
-            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+
+    cleanup() {
+        for (let i = this.particles.length - 1; i >= 0; --i) {
+            if (i === this.particles.length - 1 && this.particles[i].ttl === 0) {
 
                 this.particles.pop();
                 continue;
-            }    
-            
-            if (this.particles[i].ttl === 0){
+            }
+
+            if (this.particles[i].ttl === 0) {
                 this.particles[i] = this.particles.pop()
             }
-            
+
         }
 
     }
@@ -299,17 +306,17 @@ class Boost {
 
     draw() { for (const p of this.particles) p.draw() }
 
-        cleanup(){
-        for (let i = this.particles.length - 1; i >= 0; --i){
-            if (i === this.particles.length -1 && this.particles[i].ttl === 0){
+    cleanup() {
+        for (let i = this.particles.length - 1; i >= 0; --i) {
+            if (i === this.particles.length - 1 && this.particles[i].ttl === 0) {
                 this.particles.pop();
                 continue;
-            }    
-            
-            if (this.particles[i].ttl === 0){
+            }
+
+            if (this.particles[i].ttl === 0) {
                 this.particles[i] = this.particles.pop()
             }
-            
+
         }
 
     }
@@ -386,17 +393,14 @@ class Particle {
     }
 }
 
-function cleanup(){
+function cleanup() {
     console.log(`Length Before: ${explosions.length}`)
-    bodies = bodies.filter(b => b.active)
-    photons = photons.filter(p => p.ttl > 0)
-    for (const e of explosions){
-        console.log(`Particles Length before: ${e.particles.length}`)
-        e.cleanup()
-        console.log(`Particles Length after: ${e.particles.length}`)
-    }
+    Body.bodies = Body.bodies.filter(b => b.active)
+    Photon.photons = Photon.photons.filter(p => p.ttl > 0)
+    for (const e of explosions) e.cleanup()
+    for (const e of Explosion.explosions) e.cleanup()
     explosions = explosions.filter(e => e.particles.length > 0)
-    console.log(`Length After: ${explosions.length}`)
+    Explosion.explosions = Explosion.explosions.filter(e => e.particles.length > 0)
 
 }
 
@@ -405,44 +409,67 @@ function checkCollision(b1, b2) {
 }
 
 const ship = new Ship()
-let photons = [];
-let bodies = [];
 let explosions = [];
-
-for (let index = 0; index < particleCount; index++) {
-    bodies.push(new Body())
-}
 
 let counter = 0
 
-function animate() {
+const targetFPS = 60;
+const threshold = 1000 / targetFPS; // 1 second / 60fps = 16.67ms threshold
+let lastFrameTime = performance.now();
+let lastSecondTime = performance.now();
+let fps = 0;
+let fpsCounter = 0;
 
-    if (++counter % 600 === 0){
+function animate(currentTime = performance.now()) {
+
+    if (currentTime - lastFrameTime < threshold) {
+        requestAnimationFrame(animate);
+        return;
+    }
+    lastFrameTime = currentTime;
+
+    if (performance.now() - lastSecondTime > 1000) {
+        fps = fpsCounter;
+        lastSecondTime = performance.now();
+        fpsCounter = 0;
+    }
+
+    ++fpsCounter;
+
+
+    if (++counter % 600 === 0) {
         cleanup()
     }
 
     view.clearRect(0, 0, canvas.width, canvas.height)
 
-    for (const b of bodies) {
+    view.font = '20px Arial';
+    view.fillStyle = 'white';
+    view.fillText(`FPS: ${fps}`, 20, 20);
+
+    for (const b of Body.bodies) {
         b.update();
     }
 
-    for (const p of photons) {
+    for (const p of Photon.photons) {
         p.update();
     }
 
-    ship.checkCollisions(bodies)
-    checkBodyCollisions(bodies, photons);
+    ship.checkCollisions(Body.bodies)
+    checkBodyCollisions(Body.bodies, Photon.photons);
 
-    for (const b of bodies) {
+    for (const b of Body.bodies) {
         b.draw();
     }
 
-    for (const p of photons) {
+    for (const p of Photon.photons) {
         p.draw();
     }
 
     for (const e of explosions) {
+        e.draw();
+    }
+    for (const e of Explosion.explosions) {
         e.draw();
     }
 
@@ -459,11 +486,11 @@ function checkBodyCollisions(bds, photons) {
                 if (checkCollision(b, p)) {
                     b.active = false;
                     p.die();
-                    explosions.push(new Explosion(b.x, b.y));
+                    Explosion.explosions.push(new Explosion(b.x, b.y));
 
-                    if (b.radius > 40 ){
-                        bodies.push(new Body(b.radius * 0.75, b.x, b.y));
-                        bodies.push(new Body(b.radius * 0.75, b.x, b.y));
+                    if (b.radius > 40) {
+                        Body.bodies.push(new Body(b.radius * 0.75, b.x, b.y));
+                        Body.bodies.push(new Body(b.radius * 0.75, b.x, b.y));
                     }
                 }
             }
