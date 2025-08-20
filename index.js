@@ -4,6 +4,7 @@ import Photon from "./classes/actions/Photon.js";
 import Explosion from "./classes/effects/Explosion.js";
 import Utils from "./classes/utils/utils.js"
 import canvasUtils from "./canvas.js";
+import {Input} from "./classes/actions/Input.js"
 
 canvasUtils.canvas = document.getElementById("canvasObject");
 const canvas = canvasUtils.canvas
@@ -29,6 +30,7 @@ let fpsCounter = 0;
 Utils.init();
 
 function animate(currentTime = performance.now()) {
+    if(Input.Reset) console.log("Reset");
 
     // if (currentTime - lastFrameTime < threshold) {
     //     requestAnimationFrame(animate);

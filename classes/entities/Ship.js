@@ -1,4 +1,5 @@
-import Keyboard from "../actions/Keyboard.js";
+// import Keyboard from "../actions/Keyboard.js";
+import { Input } from "../actions/Input.js";
 import Boost from "../actions/Boost.js";
 import canvasUtils from "../../canvas.js";
 import Photon from "../actions/Photon.js";
@@ -9,6 +10,19 @@ class Ship {
 
     static boosts = [];
     constructor(xArg = canvas.width / 2, yArg = canvas.height / 2) {
+        this.init(xArg, yArg)
+    }
+
+    get tip() {
+        const nose = {
+            x: this.radius,
+            y: 0
+        }
+
+        return this.rotate(nose);
+    }
+
+    init(xArg = canvas.width / 2, yArg = canvas.height / 2) {
         this.x = xArg;
         this.y = yArg;
         this.angle = -Math.PI / 2;
@@ -20,14 +34,7 @@ class Ship {
         this.active = true;
     }
 
-    get tip() {
-        const nose = {
-            x: this.radius,
-            y: 0
-        }
-
-        return this.rotate(nose);
-    }
+    reset = () => this.init();
 
     thrust() {
         const ax = Math.cos(this.angle) * this.power;
@@ -74,10 +81,10 @@ class Ship {
 
     update() {
         if (this.active) {
-            if (Keyboard.Left) this.angle -= 0.015;
-            if (Keyboard.Right) this.angle += 0.015;
-            if (Keyboard.Thrust) this.thrust();
-            if (Keyboard.Fire) this.fire();
+            if (Input.Left) this.angle -= 0.015;
+            if (Input.Right) this.angle += 0.015;
+            if (Input.Thrust) this.thrust();
+            if (Input.Fire) this.fire();
 
             this.x += this.dx;
             this.y += this.dy;

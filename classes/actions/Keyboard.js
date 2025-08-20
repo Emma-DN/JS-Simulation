@@ -15,10 +15,7 @@ class Keyboard {
         Keyboard.keys[key] = false;
         return down;
     }
-    static get Left() { return !!Keyboard.keys.KeyA }
-    static get Right() { return !!Keyboard.keys.KeyD }
-    static get Thrust() { return !!Keyboard.keys.KeyW || !!Keyboard.keys.Space }
-    static get Fire() { return Keyboard.keyOnce("Enter") }
+
 }
 
 export default Keyboard
