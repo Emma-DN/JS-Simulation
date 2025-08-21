@@ -12,6 +12,8 @@ class Explosion {
         }
     }
 
+    static reset = () => this.explosions = [];
+
     draw() { for (const p of this.particles) p.draw() }
 
     cleanup() {

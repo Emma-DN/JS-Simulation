@@ -9,7 +9,7 @@ import Explosion from "../effects/Explosion.js";
 class Ship {
 
     static boosts = [];
-    constructor(xArg = canvas.width / 2, yArg = canvas.height / 2) {
+    constructor(xArg = canvasUtils.canvas.width / 2, yArg = canvasUtils.canvas.height / 2) {
         this.init(xArg, yArg)
     }
 
@@ -22,7 +22,7 @@ class Ship {
         return this.rotate(nose);
     }
 
-    init(xArg = canvas.width / 2, yArg = canvas.height / 2) {
+    init(xArg = canvasUtils.canvas.width / 2, yArg = canvasUtils.canvas.height / 2) {
         this.x = xArg;
         this.y = yArg;
         this.angle = -Math.PI / 2;
@@ -32,6 +32,7 @@ class Ship {
         this.power = 0.01;
         this.maxSpeed = 2;
         this.active = true;
+        Ship.boosts = [];
     }
 
     reset = () => this.init();

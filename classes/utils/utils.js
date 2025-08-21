@@ -18,9 +18,14 @@ class Utils {
     }
 
     static init(){
-        for (let index = 0; index < Body.count; index++) {
-            Body.bodies.push(new Body())
-        }
+        Body.init();
+    }
+
+    static reset(ship) {
+        ship.reset();
+        Body.reset();
+        Explosion.reset();
+        Photon.reset();
     }
 
     static checkCollision(b1, b2) {

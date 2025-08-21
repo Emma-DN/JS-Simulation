@@ -21,6 +21,15 @@ class Body {
         return this.radius * 2
     }
 
+    static init(){
+        this.bodies = [];
+        for (let index = 0; index < this.count; index++) {
+            this.bodies.push(new Body())
+        }
+    }
+
+    static reset = () => this.init();
+
     update() {
 
         if (this.active) {

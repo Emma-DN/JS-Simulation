@@ -16,7 +16,7 @@ window.addEventListener("resize", () => canvasUtils.resizeCanvas());
 canvasUtils.resizeCanvas()
 
 
-const ship = new Ship(canvas.width / 2, canvas.height / 2)
+const ship = new Ship()
 
 let counter = 0
 
@@ -30,7 +30,9 @@ let fpsCounter = 0;
 Utils.init();
 
 function animate(currentTime = performance.now()) {
-    if(Input.Reset) console.log("Reset");
+    if(Input.Reset){
+         Utils.reset(ship);
+    }
 
     // if (currentTime - lastFrameTime < threshold) {
     //     requestAnimationFrame(animate);
