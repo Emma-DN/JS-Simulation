@@ -13,6 +13,11 @@ class Photon {
         this.dy = Math.sin(angle) * this.power;
     }
 
+    static reset() {
+        this.photons = [];
+        this.counter = 0;
+    }
+
     update() {
         if (this.ttl > 0) {
             this.ttl -= 1;
